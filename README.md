@@ -7,7 +7,7 @@
 需要 Node.js 22.19 或更高版本。使用 DSH 官方 profile 插件命令安装已审查的固定提交：
 
 ```sh
-npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tunnel-qr-plugin#e5ebbc1cd4f402f8bb98090981f95e98d201a3bf"
+npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tunnel-qr-plugin#88d36735b54cfe28bb16d4f72058f96bf43df53d"
 ```
 
 安装完成后重启 Web profile。首次启动会从 Cloudflare 官方 GitHub Release 下载对应平台的固定版本，校验 SHA-256 后缓存到 DSH 插件数据目录。下载和隧道启动完成后，点击右下角“二维码”按钮即可查看当前公网入口。
