@@ -17,4 +17,5 @@ export function apply(ctx: ClientContext): void {
     unregister()
     controller.dispose()
   }, 'tunnel-qr client overlay')
+  void controller.open()
 }
