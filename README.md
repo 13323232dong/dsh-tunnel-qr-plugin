@@ -17,7 +17,7 @@ npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tu
 - 手机扫描二维码后会自动完成一次性登录，不需要输入账号或密码。
 - 二维码中的令牌只使用一次，并且仅在当前隧道地址和有效期内可用。
 - 登录成功后使用 `HttpOnly; Secure; SameSite=Strict` Cookie 访问 HTTP 和 WebSocket。
-- 可以在弹窗中复制公网地址、刷新二维码或重启隧道。
+- 可以在弹窗中刷新二维码。
 - Quick Tunnel 地址可能在 DSH 或隧道重启后变化；旧地址、旧二维码和旧会话会失效。
 
 ## 支持平台
@@ -35,7 +35,7 @@ npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tu
 
 - `正在启动`：正在校验或下载程序并建立隧道。
 - `正在重连`：临时连接中断，插件正在有限次数重试。
-- `启动失败`：可先在二维码弹窗中重启；若仍失败，检查 GitHub 下载网络和本机防火墙。
+- `启动失败`：可刷新二维码重新读取状态；若仍失败，检查 GitHub 下载网络和本机防火墙。
 - `平台不支持`：当前系统或架构没有明确映射的 Cloudflare 发布物，插件不会尝试运行其他架构文件。
 
 所有状态和二维码接口都使用 `Cache-Control: no-store`。公网入口只连接回环地址上的认证代理，不会直接暴露 DSH 本地端口。插件不会把二维码令牌、会话 Cookie 或临时公网地址写入仓库。

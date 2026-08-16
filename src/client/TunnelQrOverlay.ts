@@ -6,8 +6,6 @@ export interface TunnelQrOverlayHandlers {
   open(target?: HTMLElement | null): void | Promise<void>
   close(): void
   refresh(): void | Promise<void>
-  restart(): void | Promise<void>
-  copyUrl(): void | Promise<void>
   handleKeyDown(event: Pick<KeyboardEvent, 'key'>): void
   handleBackdrop(): void
 }
@@ -100,8 +98,6 @@ export function createTunnelQrOverlayComponent(controller: TunnelQrController): 
       open: target => { void controller.open(target ?? undefined) },
       close: () => { controller.close() },
       refresh: () => { void controller.refresh() },
-      restart: () => { void controller.restart() },
-      copyUrl: () => { void controller.copyUrl() },
       handleKeyDown: event => { controller.handleKeyDown(event) },
       handleBackdrop: () => { controller.handleBackdrop() },
     })
@@ -112,8 +108,6 @@ export function buildTunnelQrOverlayView(
   snapshot: TunnelQrOverlayState,
   handlers: TunnelQrOverlayHandlers,
 ): React.ReactElement {
-  const publicUrl = snapshot.qr?.publicUrl
-    ?? (snapshot.status?.status === 'ready' ? snapshot.status.publicUrl : null)
   return React.createElement(
     React.Fragment,
     null,
@@ -161,7 +155,7 @@ export function buildTunnelQrOverlayView(
         React.createElement('p', {
           style: { margin: '12px 0 0', fontSize: '12px', color: '#555', minHeight: '18px' },
         }, describeStatus(snapshot)),
-        publicUrl === null || snapshot.qr === null
+        snapshot.qr === null
           ? React.createElement('div', {
             style: {
               display: 'grid',
@@ -181,11 +175,6 @@ export function buildTunnelQrOverlayView(
             alt: 'DSH 公网访问二维码',
             style: qrStyle,
           }),
-        React.createElement(
-          'div',
-          { style: { marginTop: '12px', fontSize: '12px', color: '#333', overflowWrap: 'anywhere' } },
-          publicUrl ?? '等待公网地址…',
-        ),
         snapshot.error === null ? null : React.createElement(
           'div',
           { role: 'status', style: { marginTop: '10px', color: '#b91c1c', fontSize: '12px' } },
@@ -193,39 +182,15 @@ export function buildTunnelQrOverlayView(
         ),
         React.createElement(
           'div',
-          { style: controlRowStyle },
-          React.createElement(
-            'button',
-            {
-              type: 'button',
-              title: '复制公网地址',
-              'aria-label': '复制公网地址',
-              style: iconButtonStyle,
-              disabled: publicUrl === null,
-              onClick: () => { void handlers.copyUrl() },
-            },
-            snapshot.copyState === 'copied' ? '已复制' : snapshot.copyState === 'failed' ? '复制失败' : '复制',
-          ),
-          React.createElement(
-            'div',
-            { style: { display: 'flex', gap: '8px' } },
-            React.createElement('button', {
-              type: 'button',
-              title: '刷新二维码',
-              'aria-label': '刷新二维码',
-              style: iconButtonStyle,
-              disabled: snapshot.busy !== 'idle',
-              onClick: () => { void handlers.refresh() },
-            }, snapshot.busy === 'refreshing' ? '刷新中' : '刷新'),
-            React.createElement('button', {
-              type: 'button',
-              title: '重启内网穿透',
-              'aria-label': '重启内网穿透',
-              style: iconButtonStyle,
-              disabled: snapshot.busy !== 'idle',
-              onClick: () => { void handlers.restart() },
-            }, snapshot.busy === 'restarting' ? '重启中' : '重启'),
-          ),
+          { style: { ...controlRowStyle, justifyContent: 'flex-end' } },
+          React.createElement('button', {
+            type: 'button',
+            title: '刷新二维码',
+            'aria-label': '刷新二维码',
+            style: iconButtonStyle,
+            disabled: snapshot.busy !== 'idle',
+            onClick: () => { void handlers.refresh() },
+          }, snapshot.busy === 'refreshing' ? '刷新中' : '刷新'),
         ),
       ),
     ),
@@ -243,7 +208,7 @@ function describeStatus(snapshot: TunnelQrOverlayState): string {
     case 'reconnecting':
       return `正在重连公网地址（第 ${status.attempt} 次）。`
     case 'failed':
-      return `${status.message}${status.retryable ? ' 可尝试刷新或重启。' : ''}`
+      return `${status.message}${status.retryable ? ' 可尝试刷新。' : ''}`
     case 'unsupported':
       return status.message
     default:

@@ -42,8 +42,6 @@ describe('tunnel qr overlay registration', () => {
       open: vi.fn(),
       close: vi.fn(),
       refresh: vi.fn(),
-      restart: vi.fn(),
-      copyUrl: vi.fn(),
       handleKeyDown: vi.fn(),
       handleBackdrop: vi.fn(),
     })
@@ -83,5 +81,37 @@ describe('tunnel qr overlay registration', () => {
     })
 
     for (const dispose of cleanups.reverse()) dispose()
+  })
+
+  test('shows only QR refresh and close controls for a ready tunnel', () => {
+    const view = buildTunnelQrOverlayView({
+      open: true,
+      busy: 'idle',
+      status: {
+        status: 'ready',
+        generation: 1,
+        updatedAt: 1,
+        publicUrl: 'https://sample.trycloudflare.com',
+      },
+      qr: {
+        generation: 1,
+        publicUrl: 'https://sample.trycloudflare.com',
+        expiresAt: 10,
+        qrDataUrl: 'data:image/png;base64,AA==',
+      },
+      error: null,
+      copyState: 'idle',
+    }, {
+      open: vi.fn(),
+      close: vi.fn(),
+      refresh: vi.fn(),
+      handleKeyDown: vi.fn(),
+      handleBackdrop: vi.fn(),
+    })
+
+    const text = JSON.stringify(view)
+    expect(text).toContain('刷新二维码')
+    expect(text).not.toContain('sample.trycloudflare.com')
+    expect(text).not.toMatch(/复制|重启/)
   })
 })

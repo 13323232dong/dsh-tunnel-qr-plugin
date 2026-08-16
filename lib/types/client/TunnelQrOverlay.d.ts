@@ -4,8 +4,6 @@ export interface TunnelQrOverlayHandlers {
     open(target?: HTMLElement | null): void | Promise<void>;
     close(): void;
     refresh(): void | Promise<void>;
-    restart(): void | Promise<void>;
-    copyUrl(): void | Promise<void>;
     handleKeyDown(event: Pick<KeyboardEvent, 'key'>): void;
     handleBackdrop(): void;
 }
