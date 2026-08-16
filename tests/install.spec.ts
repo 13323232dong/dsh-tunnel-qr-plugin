@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
-import { verifyInstalledProfile } from '../scripts/verify-git-install.mjs'
+import { verifyDumpConfig, verifyInstalledProfile } from '../scripts/verify-git-install.mjs'
 
 const temporaryRoots: string[] = []
 
@@ -32,6 +32,8 @@ async function fixture(): Promise<{ readonly dshHome: string; readonly profileDi
     writeFile(join(packageDirectory, 'lib', 'index.js'), ''),
     writeFile(join(packageDirectory, 'lib', 'client.js'), ''),
     writeFile(join(packageDirectory, 'cordis.patch.yml'), '- insert: []\n'),
+    writeFile(join(packageDirectory, 'README.md'), '# Fixture\n'),
+    writeFile(join(packageDirectory, 'LICENSE'), 'fixture\n'),
   ])
   return { dshHome, profileDirectory }
 }
@@ -51,5 +53,12 @@ describe('clean Git installation verifier', () => {
     await rm(join(value.profileDirectory, 'node_modules', 'dsh-tunnel-qr-plugin', 'lib', 'client.js'))
 
     await expect(verifyInstalledProfile(value.dshHome, 'web')).rejects.toThrow(/client\.js/)
+  })
+
+  test('requires the installed bundle row in the composed config', () => {
+    expect(() => verifyDumpConfig('# == dsh-tunnel-qr-plugin\n- id: tunnel-qr\n  name: dsh-tunnel-qr-plugin\n'))
+      .not.toThrow()
+    expect(() => verifyDumpConfig('- id: another-plugin\n  name: another-plugin\n'))
+      .toThrow(/tunnel-qr/)
   })
 })
