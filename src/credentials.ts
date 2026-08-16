@@ -14,6 +14,11 @@ interface CredentialRecord {
   readonly expiresAt: number
 }
 
+interface SessionRecord {
+  readonly digest: Buffer
+  readonly expiresAt: number
+}
+
 export interface IssuedQrToken {
   readonly token: string
   readonly expiresAt: number
@@ -37,7 +42,7 @@ export class QrCredentials {
   private readonly sessionLifetimeMs: number
   private readonly now: () => number
   private readonly tokens = new Map<string, CredentialRecord>()
-  private readonly sessions = new Map<string, CredentialRecord>()
+  private readonly sessions = new Map<string, SessionRecord>()
 
   constructor(options: CredentialOptions) {
     requirePositive('tokenLifetimeMs', options.tokenLifetimeMs)
@@ -72,35 +77,31 @@ export class QrCredentials {
     const session = randomBytes(32).toString('base64url')
     const sessionDigest = digest(session)
     const expiresAt = this.now() + this.sessionLifetimeMs
-    this.sessions.set(sessionDigest.toString('hex'), {
-      digest: sessionDigest,
-      generation,
-      expiresAt,
-    })
+    this.sessions.set(sessionDigest.toString('hex'), { digest: sessionDigest, expiresAt })
     return { ok: true, session, expiresAt }
   }
 
-  /** Validate one public-session cookie for the active tunnel generation. */
-  validateSession(session: string, generation: number): boolean {
+  /**
+   * Validate one public-session cookie.
+   * Sessions are browser-host scoped by the tunnel hostname, so a reconnect
+   * generation must not invalidate an already opened public page.
+   */
+  validateSession(session: string, _generation: number): boolean {
     const presentedDigest = digest(session)
     const key = presentedDigest.toString('hex')
     const record = this.sessions.get(key)
     const digestMatches = timingSafeEqual(record?.digest ?? EMPTY_DIGEST, presentedDigest)
     if (record === undefined) return false
     const valid = digestMatches
-      && record.generation === generation
       && record.expiresAt > this.now()
     if (!valid) this.sessions.delete(key)
     return valid
   }
 
-  /** Remove every token and session associated with a retired public URL. */
+  /** Remove QR tokens associated with a retired public URL. */
   invalidateGeneration(generation: number): void {
     for (const [key, record] of this.tokens) {
       if (record.generation === generation) this.tokens.delete(key)
-    }
-    for (const [key, record] of this.sessions) {
-      if (record.generation === generation) this.sessions.delete(key)
     }
   }
 

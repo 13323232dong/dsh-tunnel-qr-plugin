@@ -40,7 +40,7 @@ describe('QR credentials', () => {
       .toEqual({ ok: false, code: 'invalid-token' })
   })
 
-  test('invalidates old generation records and clears all state', () => {
+  test('invalidates old-generation QR tokens and clears all state on shutdown', () => {
     const credentials = new QrCredentials({ tokenLifetimeMs: 100, sessionLifetimeMs: 1_000 })
     const token = credentials.issueQrToken(4)
     const exchange = credentials.exchangeQrToken(token.token, 4)
@@ -48,11 +48,23 @@ describe('QR credentials', () => {
     credentials.issueQrToken(4)
 
     credentials.invalidateGeneration(4)
-    expect(credentials.validateSession(exchange.session, 4)).toBe(false)
-    expect(credentials.counts()).toEqual({ tokens: 0, sessions: 0 })
+    expect(credentials.validateSession(exchange.session, 4)).toBe(true)
+    expect(credentials.counts()).toEqual({ tokens: 0, sessions: 1 })
 
     credentials.issueQrToken(5)
     credentials.clear()
     expect(credentials.counts()).toEqual({ tokens: 0, sessions: 0 })
+  })
+
+  test('keeps an issued public session valid across later tunnel generations', () => {
+    const credentials = new QrCredentials({ tokenLifetimeMs: 100, sessionLifetimeMs: 1_000 })
+    const token = credentials.issueQrToken(4)
+    const exchange = credentials.exchangeQrToken(token.token, 4)
+    if (!exchange.ok) throw new Error('expected successful exchange')
+
+    credentials.invalidateGeneration(4)
+
+    expect(credentials.validateSession(exchange.session, 5)).toBe(true)
+    expect(credentials.counts()).toEqual({ tokens: 0, sessions: 1 })
   })
 })

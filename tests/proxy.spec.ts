@@ -43,10 +43,11 @@ async function fixtureTarget(): Promise<{ readonly port: number; readonly close:
   }
 }
 
-async function setup(): Promise<{
+async function setup(generationRef: { current: number } = { current: 3 }): Promise<{
   readonly baseUrl: string
   readonly port: number
   readonly credentials: QrCredentials
+  readonly generationRef: { current: number }
 }> {
   const target = await fixtureTarget()
   closers.push(target.close)
@@ -55,7 +56,7 @@ async function setup(): Promise<{
     targetHost: '127.0.0.1',
     targetPort: target.port,
     credentials,
-    generation: () => 3,
+    generation: () => generationRef.current,
     limiter: new FixedWindowRateLimiter({
       perSourceLimit: 10, globalLimit: 100, windowMs: 60_000, maxSources: 100,
     }),
@@ -63,7 +64,7 @@ async function setup(): Promise<{
   })
   const port = await proxy.start()
   closers.push(() => proxy.close())
-  return { baseUrl: `http://127.0.0.1:${port}`, port, credentials }
+  return { baseUrl: `http://127.0.0.1:${port}`, port, credentials, generationRef }
 }
 
 async function login(baseUrl: string, credentials: QrCredentials): Promise<string> {
@@ -133,5 +134,25 @@ describe('AuthenticationProxy', () => {
     ].join('\r\n'))
     const [chunk] = await once(socket, 'data') as [Buffer]
     expect(chunk.toString('utf8')).toContain('101 Switching Protocols')
+  })
+
+  test('keeps an authenticated public session usable after a later tunnel generation starts', async () => {
+    const generationRef = { current: 3 }
+    const { baseUrl, credentials } = await setup(generationRef)
+    const cookie = await login(baseUrl, credentials)
+
+    generationRef.current = 4
+
+    const response = await fetch(`${baseUrl}/api/session.history`, {
+      method: 'POST',
+      headers: { cookie },
+      body: 'request-body',
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      method: 'POST',
+      url: '/api/session.history',
+      body: 'request-body',
+    })
   })
 })

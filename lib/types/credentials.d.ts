@@ -27,9 +27,13 @@ export declare class QrCredentials {
     issueQrToken(generation: number): IssuedQrToken;
     /** Consume a QR token exactly once and create a public-session cookie value. */
     exchangeQrToken(token: string, generation: number): TokenExchange;
-    /** Validate one public-session cookie for the active tunnel generation. */
-    validateSession(session: string, generation: number): boolean;
-    /** Remove every token and session associated with a retired public URL. */
+    /**
+     * Validate one public-session cookie.
+     * Sessions are browser-host scoped by the tunnel hostname, so a reconnect
+     * generation must not invalidate an already opened public page.
+     */
+    validateSession(session: string, _generation: number): boolean;
+    /** Remove QR tokens associated with a retired public URL. */
     invalidateGeneration(generation: number): void;
     /** Remove expired records without exposing stored digests. */
     prune(): void;
