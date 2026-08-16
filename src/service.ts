@@ -5,7 +5,7 @@ import { Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { resolveArtifact } from './artifacts.js'
 import type { TunnelConfig } from './config.js'
-import { DEFAULT_TUNNEL_CONFIG } from './config.js'
+import { DEFAULT_TUNNEL_CONFIG, resolveTunnelConfig } from './config.js'
 import type { TunnelQrResponse, TunnelSnapshot } from './contracts.js'
 import { QrCredentials } from './credentials.js'
 import { ensureCloudflared, CloudflaredDownloadError } from './download.js'
@@ -47,7 +47,7 @@ function dshHome(): string {
   return process.env.DSH_HOME ?? join(homedir(), '.dsh')
 }
 
-function defaultCacheDirectory(config: PluginConfig): string {
+function defaultCacheDirectory(config: TunnelConfig): string {
   return config.binaryCacheDirectory ?? join(dshHome(), 'plugins', 'dsh-tunnel-qr-plugin', 'cloudflared')
 }
 
@@ -94,9 +94,12 @@ export class TunnelQrService extends Service {
   private proxy: AuthenticationProxy | undefined
   private manager: TunnelManager | undefined
 
-  constructor(ctx: ConstructorParameters<typeof Service>[0], private readonly config: PluginConfig = {}) {
+  constructor(ctx: ConstructorParameters<typeof Service>[0], config: PluginConfig = {}) {
     super(ctx, 'tunnelQr')
+    this.config = resolveTunnelConfig(config)
   }
+
+  private readonly config!: TunnelConfig
 
   getSnapshot(): TunnelSnapshot {
     return this.manager?.getSnapshot() ?? this.snapshot
@@ -126,7 +129,7 @@ export class TunnelQrService extends Service {
       }),
       'tunnel-qr: routes',
     )
-    this.ctx.effect(() => () => void this.disposeOwned(), 'tunnel-qr: resources')
+    this.ctx.effect(() => () => this.disposeOwned(), 'tunnel-qr: resources')
     await this.initializeRuntime()
   }
 
@@ -145,11 +148,11 @@ export class TunnelQrService extends Service {
     let executable: string
     try {
       executable = await ensureCloudflared({
-        version: this.config.cloudflaredVersion ?? DEFAULT_TUNNEL_CONFIG.cloudflaredVersion,
+        version: this.config.cloudflaredVersion,
         artifact: artifactResolution.artifact,
         expectedSha256: artifactResolution.artifact.sha256,
         cacheDirectory: defaultCacheDirectory(this.config),
-        downloadTimeoutMs: this.config.downloadTimeoutMs ?? DEFAULT_TUNNEL_CONFIG.downloadTimeoutMs,
+        downloadTimeoutMs: this.config.downloadTimeoutMs,
       })
     } catch (error) {
       if (error instanceof CloudflaredDownloadError) {
@@ -185,7 +188,7 @@ export class TunnelQrService extends Service {
       credentials: this.credentials,
       generation: () => this.manager?.getSnapshot().generation ?? 0,
       limiter,
-      sessionLifetimeMs: this.config.publicSessionLifetimeMs ?? DEFAULT_TUNNEL_CONFIG.publicSessionLifetimeMs,
+      sessionLifetimeMs: this.config.publicSessionLifetimeMs,
     })
     let proxyPort: number
     try {
@@ -204,10 +207,10 @@ export class TunnelQrService extends Service {
     this.manager = new TunnelManager({
       executable,
       proxyPort,
-      startupTimeoutMs: this.config.tunnelStartupTimeoutMs ?? DEFAULT_TUNNEL_CONFIG.tunnelStartupTimeoutMs,
-      restartLimit: this.config.restartLimit ?? DEFAULT_TUNNEL_CONFIG.restartLimit,
-      restartBackoffMinMs: this.config.restartBackoffMinMs ?? DEFAULT_TUNNEL_CONFIG.restartBackoffMinMs,
-      restartBackoffMaxMs: this.config.restartBackoffMaxMs ?? DEFAULT_TUNNEL_CONFIG.restartBackoffMaxMs,
+      startupTimeoutMs: this.config.tunnelStartupTimeoutMs,
+      restartLimit: this.config.restartLimit,
+      restartBackoffMinMs: this.config.restartBackoffMinMs,
+      restartBackoffMaxMs: this.config.restartBackoffMaxMs,
       onGenerationRetired: generation => { this.credentials.invalidateGeneration(generation) },
     })
     void this.manager.start()

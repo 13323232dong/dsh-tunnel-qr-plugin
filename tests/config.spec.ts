@@ -30,5 +30,7 @@ describe('tunnel configuration', () => {
     expect(() => resolveTunnelConfig({ qrTokenLifetimeMs: 0 })).toThrow(/qrTokenLifetimeMs/)
     expect(() => resolveTunnelConfig({ restartBackoffMinMs: 10, restartBackoffMaxMs: 5 }))
       .toThrow(/restartBackoffMaxMs/)
+    expect(() => resolveTunnelConfig({ binaryCacheDirectory: '' })).toThrow(/binaryCacheDirectory/)
+    expect(() => resolveTunnelConfig({ cloudflaredVersion: '' })).toThrow(/cloudflaredVersion/)
   })
 })

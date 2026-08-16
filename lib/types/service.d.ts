@@ -15,7 +15,6 @@ export declare const Config: z<PluginConfig>;
 export declare function createQrResponse(publicUrl: string, generation: number, credentials: QrCredentials): Promise<TunnelQrResponse>;
 /** Host service that owns tunnel startup, authenticated proxying, and QR routes. */
 export declare class TunnelQrService extends Service {
-    private readonly config;
     static inject: string[];
     static Config: z<Partial<TunnelConfig>>;
     private snapshot;
@@ -23,6 +22,7 @@ export declare class TunnelQrService extends Service {
     private proxy;
     private manager;
     constructor(ctx: ConstructorParameters<typeof Service>[0], config?: PluginConfig);
+    private readonly config;
     getSnapshot(): TunnelSnapshot;
     createQr(): Promise<TunnelQrResponse>;
     restart(): Promise<void>;
