@@ -16,5 +16,6 @@
     "tsBuildInfoFile": "node_modules/.cache/dsh-tunnel-qr/host.tsbuildinfo",
     "types": ["node"]
   },
-  "include": ["src/index.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/client/**"]
 }
