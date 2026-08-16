@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import * as tar from 'tar'
-import type { CloudflaredArtifact } from './artifacts.ts'
+import type { CloudflaredArtifact } from './artifacts.js'
 
 const MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024
 const inFlight = new Map<string, Promise<string>>()
