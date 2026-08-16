@@ -27,6 +27,9 @@
   },
   "scripts": { "bundle": "tsdown", "watch": "tsdown --watch" },
   "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:^"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-client-runtime": "workspace:^",

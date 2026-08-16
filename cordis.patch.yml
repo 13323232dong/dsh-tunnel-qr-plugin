@@ -1,3 +1,6 @@
 - insert:
     - id: ui-tunnel-qr
       name: '@deepseek-ai/dsh-client-ui-tunnel-qr'
+      config:
+        username: !!js process.env.DSH_TUNNEL_AUTH_USERNAME
+        password: !!js process.env.DSH_TUNNEL_AUTH_PASSWORD

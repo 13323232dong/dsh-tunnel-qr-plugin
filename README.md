@@ -6,6 +6,7 @@ Standalone DeepSeek Harness Web plugin that adds a right-bottom `二维码` butt
 
 - fixed right-bottom button with a mobile-safe offset;
 - modal QR viewer with close button, backdrop click, and Escape support;
+- Basic Auth username display and a masked password with show/hide control;
 - plugin-owned `/dsh-public-qr.png` route with `GET` and `HEAD` support;
 - bundle patch so installing the package can activate both Host and client halves.
 
@@ -20,6 +21,15 @@ dsh plugin --profile web add https://github.com/13323232dong/dsh-tunnel-qr-plugi
 ```
 
 Restart the Web profile after installation. The package's `dsh.bundle` patch mounts the plugin and its `dsh.client` declaration loads the browser half.
+
+Set the credentials in the DSH process environment before startup:
+
+```sh
+export DSH_TUNNEL_AUTH_USERNAME='your-username'
+export DSH_TUNNEL_AUTH_PASSWORD='your-password'
+```
+
+Use the operating system keychain or a secret manager to supply the password in production. Do not commit credentials to this repository. The credential response is read-only and carries `no-store`/`no-cache` headers.
 
 ## Development
 
