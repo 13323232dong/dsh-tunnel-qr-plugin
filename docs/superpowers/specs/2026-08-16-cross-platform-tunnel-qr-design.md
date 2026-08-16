@@ -4,7 +4,7 @@
 
 `dsh-tunnel-qr-plugin` is the single installation unit for publishing a DeepSeek Harness Web profile through a free Cloudflare Quick Tunnel. Installing the bundle provides tunnel lifecycle management, public-entry authentication, dynamic QR login, and the DSH right-bottom QR interface. There is no separate QR plugin and no Cloudflare account or domain requirement.
 
-The first release supports macOS, Windows, and Linux on x64 and ARM64 where Cloudflare publishes a compatible `cloudflared` binary.
+The first release supports macOS, Windows, and Linux. macOS and Linux use Cloudflare's native x64 or ARM64 binary. Windows x64 uses the official AMD64 binary; Windows ARM64 uses that same official binary through the operating system's x64 emulation because Cloudflare does not publish a native Windows ARM64 artifact.
 
 ## User Experience
 
@@ -65,10 +65,10 @@ The login exchange is rate-limited by source and by a global bounded failure bud
 The artifact table explicitly maps supported platform and architecture pairs to official Cloudflare release assets. No fuzzy filename selection or architecture fallback is allowed.
 
 - macOS: x64 and ARM64
-- Windows: x64 and ARM64
+- Windows: x64; ARM64 through Windows x64 emulation
 - Linux: x64 and ARM64
 
-The fixed Cloudflare version and its expected SHA-256 values are release configuration, not credentials. Windows uses the `.exe` artifact. macOS and Linux set user executable permission after verification. Unsupported pairs produce the `unsupported` state and do not attempt to execute another artifact.
+The fixed Cloudflare version and its expected SHA-256 values are release configuration, not credentials. Windows uses the official AMD64 `.exe` artifact for both x64 and ARM64, with the ARM64 mapping explicitly named and tested as an emulation requirement rather than an architecture fallback. macOS and Linux set user executable permission after verification. Unsupported pairs produce the `unsupported` state and do not attempt to execute another artifact.
 
 The cache root is derived from the DSH/plugin data location, never from the repository or current working directory. Uninstall cleanup removes only paths owned and positively identified by this plugin. Runtime shutdown removes temporary files and terminates owned process trees, while the verified binary cache remains available for a later reinstall unless the DSH plugin uninstall lifecycle explicitly requests data removal.
 
@@ -93,7 +93,8 @@ The repository remains the standalone distribution source. It must have a valid 
 The preferred user command is the official profile workflow pinned to a reviewed commit:
 
 ```sh
-npx -p @deepseek-ai/dsh dsh plugin --profile web add github:13323232dong/dsh-tunnel-qr-plugin#<commit>
+PLUGIN_COMMIT="$(git rev-parse HEAD)"
+npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tunnel-qr-plugin#$PLUGIN_COMMIT"
 ```
 
 The final README will contain only a command proven from a clean `DSH_HOME`. Installation must not depend on files from a DeepSeek Harness monorepo checkout. The implementation will choose either a self-contained approved `prepare` flow or committed complete `lib/` artifacts after verifying the least-interactive official installation path.
