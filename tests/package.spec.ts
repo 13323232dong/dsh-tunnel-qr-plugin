@@ -59,4 +59,24 @@ describe('standalone package', () => {
     expect(patch).toBe('- insert:\n    - id: tunnel-qr\n      name: dsh-tunnel-qr-plugin\n      config: {}\n')
     await expect(access(resolve(root, 'assets/dsh-public-qr.png'))).rejects.toMatchObject({ code: 'ENOENT' })
   })
+
+  test('documents one pinned GitHub install without third-party account setup', async () => {
+    const readme = await readFile(resolve(root, 'README.md'), 'utf8')
+    const installTargets = readme.match(/github:13323232dong\/dsh-tunnel-qr-plugin#[0-9a-f]{40}/g) ?? []
+
+    expect(installTargets).toHaveLength(1)
+    expect(readme).toMatch(/Cloudflare (?:account|账号).*(?:not required|无需|不需要)/i)
+    expect(readme).toMatch(/Windows ARM64.*(?:x64|AMD64).*(?:emulation|仿真|模拟)/i)
+    expect(readme).not.toMatch(/Basic Auth|DSH_TUNNEL_AUTH_(?:USERNAME|PASSWORD)/i)
+  })
+
+  test('runs keyless verification on macOS, Windows, and Linux', async () => {
+    const workflow = await readFile(resolve(root, '.github/workflows/ci.yml'), 'utf8')
+
+    expect(workflow).toContain('ubuntu-latest')
+    expect(workflow).toContain('windows-latest')
+    expect(workflow).toContain('macos-latest')
+    expect(workflow).toContain('pnpm install --frozen-lockfile')
+    expect(workflow).toContain('pnpm verify')
+  })
 })
