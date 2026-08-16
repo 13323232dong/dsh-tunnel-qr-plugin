@@ -41,5 +41,6 @@ export interface TunnelQrResponse {
   readonly generation: number
   readonly publicUrl: string
   readonly expiresAt: number
+  readonly loginUrl: string
   readonly qrDataUrl: string
 }

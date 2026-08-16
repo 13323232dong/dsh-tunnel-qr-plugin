@@ -12,5 +12,6 @@ describe('QR response creation', () => {
     expect(response.loginUrl).toMatch(/^https:\/\/sample\.trycloudflare\.com\/dsh-qr-login#[A-Za-z0-9_-]+$/)
     expect(response.qrDataUrl).toMatch(/^data:image\/png;base64,/)
     expect(response.generation).toBe(4)
+    expect(response.publicUrl).toBe('https://sample.trycloudflare.com')
   })
 })
