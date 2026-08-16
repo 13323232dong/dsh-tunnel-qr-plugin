@@ -56,7 +56,8 @@ describe('standalone package', () => {
   test('ships a credential-free bundle patch and no static QR asset', async () => {
     const patch = await readFile(resolve(root, 'cordis.patch.yml'), 'utf8')
 
-    expect(patch).toBe('- insert:\n    - id: tunnel-qr\n      name: dsh-tunnel-qr-plugin\n      config: {}\n')
+    expect(patch.replaceAll('\r\n', '\n'))
+      .toBe('- insert:\n    - id: tunnel-qr\n      name: dsh-tunnel-qr-plugin\n      config: {}\n')
     await expect(access(resolve(root, 'assets/dsh-public-qr.png'))).rejects.toMatchObject({ code: 'ENOENT' })
   })
 
