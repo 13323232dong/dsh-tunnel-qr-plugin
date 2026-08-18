@@ -1,3 +1,3 @@
-import { clientBundle } from '../tsdown.client.ts'
+import { clientBundle } from './scripts/client-bundle.ts'
 
-export default clientBundle('@deepseek-ai/dsh-client-ui-tunnel-qr', ['lib/types/index.js'])
+export default clientBundle('dsh-tunnel-qr-plugin', ['lib/types/index.js'])

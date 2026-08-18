@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmitOnError": true,
+    "outDir": "lib/types",
+    "rootDir": "src",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2024",
+    "tsBuildInfoFile": "node_modules/.cache/dsh-tunnel-qr/client.tsbuildinfo",
+    "types": []
+  },
+  "include": ["src/client/**/*.ts", "src/client/**/*.tsx"]
+}

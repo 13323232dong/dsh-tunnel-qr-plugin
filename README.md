@@ -1,43 +1,50 @@
 # DSH Tunnel QR Plugin
 
-一个用于 DeepSeek Harness Web 的二维码访问插件。安装后，会在页面右下角显示“二维码”按钮，方便重新打开公网隧道的访问二维码。
-
-## 功能
-
-- 二维码按钮固定在页面右下角，并针对移动端屏幕做了安全间距适配；
-- 提供带关闭按钮的二维码弹窗，支持点击遮罩关闭和按 `Escape` 关闭；
-- 显示 Basic Auth 用户名，密码默认隐藏，并支持显示/隐藏切换；
-- 提供插件自有的 `/dsh-public-qr.png` 图片接口，支持 `GET` 和 `HEAD` 请求；
-- 通过 DSH bundle patch 同时加载 Host 端和客户端功能。
-
-二维码图片是针对已配置公网隧道生成的部署二维码。公网隧道地址发生变化后，请重新生成并替换 `assets/dsh-public-qr.png`。
+为 DeepSeek Harness Web 提供免费公网访问的一体化插件。安装后，插件自动下载并校验 `cloudflared`、启动 Cloudflare Quick Tunnel，并在 DSH 右下角提供二维码入口。不需要注册第三方账号或配置域名。
 
 ## 安装
 
-在 DSH 工作区或 profile 中，使用标准插件命令安装：
+需要 Node.js 22.19 或更高版本。使用 DSH 官方 profile 插件命令安装已审查的固定提交：
 
 ```sh
-dsh plugin --profile web add https://github.com/13323232dong/dsh-tunnel-qr-plugin.git
+npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tunnel-qr-plugin#88d36735b54cfe28bb16d4f72058f96bf43df53d"
 ```
 
-安装完成后重启 Web profile。插件的 `dsh.bundle` patch 会挂载 Host 端，`dsh.client` 声明会加载浏览器端功能。
+安装完成后重启 Web profile。首次启动会从 Cloudflare 官方 GitHub Release 下载对应平台的固定版本，校验 SHA-256 后缓存到 DSH 插件数据目录。下载和隧道启动完成后，点击右下角“二维码”按钮即可查看当前公网入口。
 
-启动 DSH 前，在进程环境变量中设置访问凭证：
+## 使用
+
+- 隧道可用后会自动弹出二维码，也可以随时点击右下角“二维码”按钮再次查看。
+- 二维码携带一次性安全密钥；手机扫描后会自动完成登录，不需要输入账号或密码。
+- 二维码弹窗打开期间每 15 秒自动刷新一次，也可以手动刷新。每个安全密钥仅能使用一次，默认 5 分钟后过期。
+- 登录成功后，浏览器使用 `HttpOnly`、`Secure`、`SameSite=Strict` Cookie 访问 HTTP 和 WebSocket。
+- Quick Tunnel 地址可能在 DSH 或隧道重启后变化；旧地址、旧二维码和旧会话会失效。
+
+## 支持平台
+
+| 系统 | 架构 | 运行方式 |
+| --- | --- | --- |
+| macOS | x64、ARM64 | Cloudflare 官方原生程序 |
+| Linux | x64、ARM64 | Cloudflare 官方原生程序 |
+| Windows | x64 | Cloudflare 官方 AMD64 程序 |
+| Windows ARM64 | ARM64 | 通过 Windows x64 emulation 运行官方 AMD64 程序，不是原生 ARM64 支持 |
+
+插件只随 DSH 进程运行，不安装 LaunchAgent、Windows Service 或 systemd 服务，也不需要管理员权限。
+
+## 状态与排查
+
+- `正在启动`：正在校验或下载程序并建立隧道。
+- `正在重连`：临时连接中断，插件正在有限次数重试。
+- `启动失败`：可刷新二维码重新读取状态；若仍失败，检查 GitHub 下载网络和本机防火墙。
+- `平台不支持`：当前系统或架构没有明确映射的 Cloudflare 发布物，插件不会尝试运行其他架构文件。
+
+所有状态和二维码接口都使用 `Cache-Control: no-store`。公网入口只连接回环地址上的认证代理，不会直接暴露 DSH 本地端口。插件不会把二维码令牌、会话 Cookie 或临时公网地址写入仓库。
+
+## 开发验证
 
 ```sh
-export DSH_TUNNEL_AUTH_USERNAME='your-username'
-export DSH_TUNNEL_AUTH_PASSWORD='your-password'
+pnpm install --frozen-lockfile
+pnpm verify
 ```
 
-生产环境建议使用操作系统钥匙串或密钥管理器提供密码。请勿把真实凭证提交到仓库。凭证接口仅提供读取能力，并设置了 `no-store`/`no-cache` 缓存策略。
-
-## 开发
-
-本仓库同时包含源代码和构建后的客户端产物。在 DSH 上游工作区中运行：
-
-```sh
-pnpm exec tsc -b tsconfig.json
-pnpm run bundle
-```
-
-插件依赖 Host profile 提供的 DSH Host Webserver 和客户端运行时包。
+`verify` 运行 Host/Client 类型检查、无网络单元与集成测试、Host/Client 构建和 Git 产物漂移检查。
