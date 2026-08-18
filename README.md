@@ -14,10 +14,10 @@ npx -p @deepseek-ai/dsh dsh plugin --profile web add "github:13323232dong/dsh-tu
 
 ## 使用
 
-- 手机扫描二维码后会自动完成一次性登录，不需要输入账号或密码。
-- 二维码中的令牌只使用一次，并且仅在当前隧道地址和有效期内可用。
-- 登录成功后使用 `HttpOnly; Secure; SameSite=Strict` Cookie 访问 HTTP 和 WebSocket。
-- 可以在弹窗中刷新二维码。
+- 隧道可用后会自动弹出二维码，也可以随时点击右下角“二维码”按钮再次查看。
+- 二维码携带一次性安全密钥；手机扫描后会自动完成登录，不需要输入账号或密码。
+- 二维码弹窗打开期间每 15 秒自动刷新一次，也可以手动刷新。每个安全密钥仅能使用一次，默认 5 分钟后过期。
+- 登录成功后，浏览器使用 `HttpOnly`、`Secure`、`SameSite=Strict` Cookie 访问 HTTP 和 WebSocket。
 - Quick Tunnel 地址可能在 DSH 或隧道重启后变化；旧地址、旧二维码和旧会话会失效。
 
 ## 支持平台
